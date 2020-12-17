@@ -221,7 +221,7 @@ list_acc = []
 list_layers =[1,2,3,4,5,6,7,8,9,10,11]
 for layer_name in list_layers:
     for q in list_q:
-        acc = train_(train_set,test_set,layer_name=[layer_name],lr = 0.1, q=q,epochs = 50)
+        acc = train_(train_set,test_set,layer_name=[layer_name],lr = 0.01, q=q,epochs = 50)
         list_acc += [acc]
     print(list_acc)
         
@@ -230,6 +230,6 @@ list_acc = np.array(list_acc).reshape((len(list_layers),-1))
 df = pd.DataFrame (list_acc)
 print(df)
 ## save to xlsx file
-filepath = './results/VGG11_weight.csv'
+filepath = './results/VGG11_weight_lr001.csv'
 
 df.to_csv(filepath,index = False)
