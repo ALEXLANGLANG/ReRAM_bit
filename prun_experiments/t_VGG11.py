@@ -213,9 +213,8 @@ def train_(train_set,test_set,layer_name, q,PATH, batch_size_train = 128, moment
 
 
 
-
 cc = train_(train_set,test_set,layer_name=[0],PATH = "s.pt", lr = 0.1, q=0.0,epochs = 50)
-
+print(cc)
 list_q = [1,5,10]
 list_acc = []
 list_layers =[1,2,3,4,5,6,7,8,9,10,11]
@@ -223,10 +222,10 @@ for lr in [0.1,0.01]:
     for layer_name in list_layers:
         for q in list_q:
             PATH = "./models/"
-            PATH += "VGG11" +"q" +str(q) + "L" + str(layer_name) +".pt"
-            acc = train_(train_set,test_set,layer_name=[layer_name],PATH = PATH, lr = lr, q=q,epochs = 50)
-            list_acc += [acc]
-    print(list_acc)
+#            PATH += "VGG11" +"q" +str(q) + "L" + str(layer_name) +".pt"
+#            acc = train_(train_set,test_set,layer_name=[layer_name],PATH = PATH, lr = lr, q=q,epochs = 50)
+#            list_acc += [acc]
+#    print(list_acc)
         
 import pandas as pd
 list_acc = np.array(list_acc).reshape((len(list_layers),-1))
