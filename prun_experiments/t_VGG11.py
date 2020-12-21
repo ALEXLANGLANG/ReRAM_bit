@@ -129,7 +129,7 @@ if device =='cuda':
 else:
     print("Run on CPU...")
 
-def train_(train_set,test_set,layer_name, q, batch_size_train = 128, momentum = 0, mask_bit_position = [1]*16, lr = 0.01, epochs = 10):
+def train_(train_set,test_set,layer_name, q,PATH, batch_size_train = 128, momentum = 0, mask_bit_position = [1]*16, lr = 0.01, epochs = 10):
     torch.manual_seed(1)
     train_loader=torch.utils.data.DataLoader(train_set, batch_size=batch_size_train, shuffle=False, pin_memory=True,num_workers=2)
     test_loader=torch.utils.data.DataLoader(test_set, batch_size=100, shuffle=False, pin_memory=True,num_workers=2)
@@ -138,7 +138,7 @@ def train_(train_set,test_set,layer_name, q, batch_size_train = 128, momentum = 
     network= Net().to(device)
     network.apply(init_weights)
     
-    layer_num =0
+    layer_num =1
     for n, m in network.named_modules():
         if isinstance(m,PrunedConv):
             if layer_num in layer_name:
@@ -149,7 +149,7 @@ def train_(train_set,test_set,layer_name, q, batch_size_train = 128, momentum = 
                  m.prune_by_percentage(q = q)
             layer_num +=1                
 
-    optimizer = optim.SGD(network.parameters(), lr=lr, momentum = 0.9, weight_decay=0.0005)
+    optimizer = optim.SGD(network.parameters(), lr=lr, momentum = 0.0, weight_decay=0.0005)
     criterion = torch.nn.CrossEntropyLoss().to(device)
     scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1, gamma=0.95)
 
@@ -162,16 +162,15 @@ def train_(train_set,test_set,layer_name, q, batch_size_train = 128, momentum = 
         total_correct = 0
         network.train()
         count_in = 0
-
+        loss = None
         for batch in train_loader: #Get batch
 
             count_in = count_in + 1
             images,labels = batch
             images, labels = images.to(device), labels.to(device)
             optimizer.zero_grad()
-
             #Do bit maskinn
-            layer_num  = 0
+            layer_num  = 1
             for name, model in network.named_modules():
                 if isinstance(model, PrunedConv):
                     if layer_num in layer_name:
@@ -183,7 +182,6 @@ def train_(train_set,test_set,layer_name, q, batch_size_train = 128, momentum = 
                     layer_num +=1
                 else:
                     pass
-
             preds=network(images) #pass batch to network
             correct = get_num_correct(preds, labels)
             loss = criterion(preds,labels) #Calculate loss
@@ -193,8 +191,10 @@ def train_(train_set,test_set,layer_name, q, batch_size_train = 128, momentum = 
             
         print("epoch: ", epoch,  "total_correct: ", total_correct)
         print("training accuracy: ", total_correct/len(train_set))
+        print("loss: ", loss.item())
+        #torch.save(network.state_dict(), PATH)
         acc_train.append(deepcopy(float(total_correct)/len(train_set)))
-
+        
         with torch.no_grad():
             correct_test=0
             for batch_test in test_loader: #Get batch
@@ -214,15 +214,18 @@ def train_(train_set,test_set,layer_name, q, batch_size_train = 128, momentum = 
 
 
 
-
+cc = train_(train_set,test_set,layer_name=[0],PATH = "s.pt", lr = 0.1, q=0.0,epochs = 50)
 
 list_q = [1,5,10]
 list_acc = []
 list_layers =[1,2,3,4,5,6,7,8,9,10,11]
-for layer_name in list_layers:
-    for q in list_q:
-        acc = train_(train_set,test_set,layer_name=[layer_name],lr = 0.01, q=q,epochs = 50)
-        list_acc += [acc]
+for lr in [0.1,0.01]:
+    for layer_name in list_layers:
+        for q in list_q:
+            PATH = "./models/"
+            PATH += "VGG11" +"q" +str(q) + "L" + str(layer_name) +".pt"
+            acc = train_(train_set,test_set,layer_name=[layer_name],PATH = PATH, lr = lr, q=q,epochs = 50)
+            list_acc += [acc]
     print(list_acc)
         
 import pandas as pd
@@ -230,6 +233,7 @@ list_acc = np.array(list_acc).reshape((len(list_layers),-1))
 df = pd.DataFrame (list_acc)
 print(df)
 ## save to xlsx file
-filepath = './results/VGG11_weight_lr001.csv'
+filepath = './results/VGG11_weight_lr01.csv'
 
-df.to_csv(filepath,index = False)
+#df.to_csv(filepath,index = False)
+

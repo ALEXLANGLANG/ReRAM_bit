@@ -38,6 +38,7 @@ class PruneLinear(nn.Module):
         len_ = len(flattened_weights)
         random.seed(4)
         index = random.sample(range(0, len_), int(q/100*len_))
+        #print(index)
         self.mask = np.ones(len_)
         self.mask[index] = 0
         self.mask = self.mask.reshape(np_weight.shape)
@@ -90,6 +91,7 @@ class PrunedConv(nn.Module):
         len_ = len(flattened_weights)
         random.seed(4)
         index = random.sample(range(0, len_), int(q/100*len_))
+        #print(index)
         self.mask = np.ones(len_)
         self.mask[index] = 0
         self.mask = self.mask.reshape(np_weight.shape)
